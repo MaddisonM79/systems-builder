@@ -175,3 +175,4 @@ At the beginning of a new working session:
 - Do not couple engine logic to Vue, React, Svelte, or any DOM API
 - Do not add "future-proofing" complexity without surfacing it as a named open question first
 - Do not redefine or synonym-ize terms from the Vocabulary in `AI_DIRECTIVES.md`
+- Do not add AI attribution lines to commits (no `Co-Authored-By: Claude` or similar)

@@ -1,20 +1,27 @@
 <template>
-  <VueFlow
-    :node-types="nodeTypes"
-    :default-edge-options="defaultEdgeOptions"
-    :zoom-on-scroll="true"
-    :pan-on-scroll="false"
-    :pan-on-drag="true"
-    :connect-on-click="false"
-    class="desktop"
-  >
-    <Background
-      :gap="28"
-      :size="1.5"
-      pattern-color="#1a1a2e"
-      variant="dots"
-    />
-  </VueFlow>
+  <div class="relative w-full h-full">
+    <VueFlow
+      :node-types="nodeTypes"
+      :default-edge-options="defaultEdgeOptions"
+      :zoom-on-scroll="true"
+      :pan-on-scroll="false"
+      :pan-on-drag="true"
+      :connect-on-click="false"
+      class="w-full h-full bg-base-300"
+    >
+      <Background
+        :gap="28"
+        :size="1.5"
+        :pattern-color="'oklch(var(--color-base-content) / 0.08)'"
+        variant="dots"
+      />
+    </VueFlow>
+
+    <!-- Theme switcher — top-right overlay -->
+    <div class="absolute top-3 right-3 z-10">
+      <ThemeSwitcher />
+    </div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -24,21 +31,18 @@ import { Background } from '@vue-flow/background'
 import { useBoardStore } from '@/stores/board'
 import type { Card, Connection } from '@/engine/graph'
 import CardNode from './CardNode.vue'
+import ThemeSwitcher from './ThemeSwitcher.vue'
 
 const boardStore = useBoardStore()
 const { addNodes, addEdges, onConnect: vfOnConnect, onNodeDragStop: vfOnNodeDragStop, fitView } = useVueFlow()
 
-// Register custom node type — cast to any to satisfy NodeTypesObject generic
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const nodeTypes: any = { card: markRaw(CardNode) }
+const nodeTypes = { card: markRaw(CardNode) as any }
 
 const defaultEdgeOptions = {
   type: 'smoothstep',
   animated: true,
-  style: { stroke: '#3b6fd4', strokeWidth: 2 },
 }
 
-// Transform engine types to Vue Flow types
 function cardToNode(card: Card): Node {
   return {
     id: card.id,
@@ -62,14 +66,11 @@ function connectionToEdge(conn: Connection): Edge {
     targetHandle: conn.targetPortId,
     type: 'smoothstep',
     animated: true,
-    style: { stroke: '#3b6fd4', strokeWidth: 2 },
   }
 }
 
-// Seed sample board if empty
 function seedBoard() {
-  // boardStore.cards is auto-unwrapped by Pinia — access directly as Map
-  if ((boardStore.cards as unknown as Map<string, Card>).size > 0) return
+  if (boardStore.cards.size > 0) return
 
   const cards: Card[] = [
     {
@@ -78,30 +79,22 @@ function seedBoard() {
       title: 'Wood Source',
       position: { x: 80, y: 200 },
       inputs: [],
-      outputs: [
-        { id: 'port-wood-gen-out', side: 'output', label: 'Wood', resourceType: 'wood' },
-      ],
+      outputs: [{ id: 'port-wood-gen-out', side: 'output', label: 'Wood', resourceType: 'wood' }],
     },
     {
       id: 'card-refiner',
       archetype: 'refiner',
       title: 'Wood Refiner',
       position: { x: 380, y: 200 },
-      inputs: [
-        { id: 'port-refiner-in', side: 'input', label: 'Raw Wood', resourceType: 'wood' },
-      ],
-      outputs: [
-        { id: 'port-refiner-out', side: 'output', label: 'Lumber', resourceType: 'lumber' },
-      ],
+      inputs: [{ id: 'port-refiner-in', side: 'input', label: 'Raw Wood', resourceType: 'wood' }],
+      outputs: [{ id: 'port-refiner-out', side: 'output', label: 'Lumber', resourceType: 'lumber' }],
     },
     {
       id: 'card-splitter',
       archetype: 'splitter',
       title: 'Lumber Split',
       position: { x: 680, y: 150 },
-      inputs: [
-        { id: 'port-splitter-in', side: 'input', label: 'Lumber', resourceType: 'lumber' },
-      ],
+      inputs: [{ id: 'port-splitter-in', side: 'input', label: 'Lumber', resourceType: 'lumber' }],
       outputs: [
         { id: 'port-splitter-out-a', side: 'output', label: 'Batch A', resourceType: 'lumber' },
         { id: 'port-splitter-out-b', side: 'output', label: 'Batch B', resourceType: 'lumber' },
@@ -112,9 +105,7 @@ function seedBoard() {
       archetype: 'seller',
       title: 'Market',
       position: { x: 980, y: 80 },
-      inputs: [
-        { id: 'port-market-in', side: 'input', label: 'Lumber', resourceType: 'lumber' },
-      ],
+      inputs: [{ id: 'port-market-in', side: 'input', label: 'Lumber', resourceType: 'lumber' }],
       outputs: [],
     },
     {
@@ -122,42 +113,16 @@ function seedBoard() {
       archetype: 'seller',
       title: 'Workshop',
       position: { x: 980, y: 290 },
-      inputs: [
-        { id: 'port-workshop-in', side: 'input', label: 'Lumber', resourceType: 'lumber' },
-      ],
+      inputs: [{ id: 'port-workshop-in', side: 'input', label: 'Lumber', resourceType: 'lumber' }],
       outputs: [],
     },
   ]
 
   const connections: Connection[] = [
-    {
-      id: 'conn-gen-refiner',
-      sourceCardId: 'card-wood-gen',
-      sourcePortId: 'port-wood-gen-out',
-      targetCardId: 'card-refiner',
-      targetPortId: 'port-refiner-in',
-    },
-    {
-      id: 'conn-refiner-splitter',
-      sourceCardId: 'card-refiner',
-      sourcePortId: 'port-refiner-out',
-      targetCardId: 'card-splitter',
-      targetPortId: 'port-splitter-in',
-    },
-    {
-      id: 'conn-splitter-market',
-      sourceCardId: 'card-splitter',
-      sourcePortId: 'port-splitter-out-a',
-      targetCardId: 'card-market',
-      targetPortId: 'port-market-in',
-    },
-    {
-      id: 'conn-splitter-workshop',
-      sourceCardId: 'card-splitter',
-      sourcePortId: 'port-splitter-out-b',
-      targetCardId: 'card-workshop',
-      targetPortId: 'port-workshop-in',
-    },
+    { id: 'conn-gen-refiner',     sourceCardId: 'card-wood-gen', sourcePortId: 'port-wood-gen-out',    targetCardId: 'card-refiner',  targetPortId: 'port-refiner-in' },
+    { id: 'conn-refiner-splitter', sourceCardId: 'card-refiner',  sourcePortId: 'port-refiner-out',    targetCardId: 'card-splitter', targetPortId: 'port-splitter-in' },
+    { id: 'conn-splitter-market',  sourceCardId: 'card-splitter', sourcePortId: 'port-splitter-out-a', targetCardId: 'card-market',   targetPortId: 'port-market-in' },
+    { id: 'conn-splitter-workshop', sourceCardId: 'card-splitter', sourcePortId: 'port-splitter-out-b', targetCardId: 'card-workshop', targetPortId: 'port-workshop-in' },
   ]
 
   cards.forEach(card => boardStore.addCard(card))
@@ -166,26 +131,15 @@ function seedBoard() {
 
 onMounted(async () => {
   seedBoard()
-
-  const cardsMap = boardStore.cards as unknown as Map<string, Card>
-  const connsMap = boardStore.connections as unknown as Map<string, Connection>
-
-  const nodes = Array.from(cardsMap.values()).map(cardToNode)
-  const edges = Array.from(connsMap.values()).map(connectionToEdge)
-
-  addNodes(nodes)
-  addEdges(edges)
-
+  addNodes(Array.from(boardStore.cards.values()).map(cardToNode))
+  addEdges(Array.from(boardStore.connections.values()).map(connectionToEdge))
   await nextTick()
   fitView({ padding: 0.15 })
 })
 
-// Handle new connections drawn by user
 vfOnConnect((params: VFConnection) => {
   if (!params.source || !params.target || !params.sourceHandle || !params.targetHandle) return
-
   const connId = `conn-${params.source}-${params.sourceHandle}-${params.target}-${params.targetHandle}`
-
   boardStore.addConnection({
     id: connId,
     sourceCardId: params.source,
@@ -193,29 +147,10 @@ vfOnConnect((params: VFConnection) => {
     targetCardId: params.target,
     targetPortId: params.targetHandle,
   })
-
-  addEdges([{
-    id: connId,
-    source: params.source,
-    sourceHandle: params.sourceHandle,
-    target: params.target,
-    targetHandle: params.targetHandle,
-    type: 'smoothstep',
-    animated: true,
-    style: { stroke: '#3b6fd4', strokeWidth: 2 },
-  }])
+  addEdges([{ id: connId, source: params.source, sourceHandle: params.sourceHandle, target: params.target, targetHandle: params.targetHandle, type: 'smoothstep', animated: true }])
 })
 
-// Sync card position back to store after drag
 vfOnNodeDragStop(({ node }) => {
   boardStore.updateCard(node.id, { position: node.position })
 })
 </script>
-
-<style scoped>
-.desktop {
-  width: 100%;
-  height: 100%;
-  background: #0a0a0f;
-}
-</style>

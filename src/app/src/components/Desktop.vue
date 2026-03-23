@@ -17,10 +17,6 @@
       />
     </VueFlow>
 
-    <!-- Theme switcher — top-right overlay -->
-    <div class="absolute top-3 right-3 z-10">
-      <ThemeSwitcher />
-    </div>
   </div>
 </template>
 
@@ -31,7 +27,6 @@ import { Background } from '@vue-flow/background'
 import { useBoardStore } from '@/stores/board'
 import type { Card, Connection } from '@/engine/graph'
 import CardNode from './CardNode.vue'
-import ThemeSwitcher from './ThemeSwitcher.vue'
 
 const boardStore = useBoardStore()
 const { addNodes, addEdges, onConnect: vfOnConnect, onNodeDragStop: vfOnNodeDragStop, fitView } = useVueFlow()

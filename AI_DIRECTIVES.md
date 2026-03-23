@@ -386,3 +386,4 @@ docs/
 - Do not create documentation files without explicit user instruction
 - Do not place any `.md` or documentation files outside of `docs/`
 - Do not add AI attribution to git commits — no `Co-Authored-By: Claude` or equivalent lines
+- Do not commit or push unless explicitly directed by the user

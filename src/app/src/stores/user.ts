@@ -16,6 +16,7 @@ export const useUserStore = defineStore('user', () => {
 
   // User preferences — persisted per user, synced to cloud
   const routingStyle = ref<'orthogonal' | 'rounded' | 'straight'>('rounded')
+  const gridStyle    = ref<'lines' | 'dots' | 'cross'>('lines')
   const theme = ref<Theme>('retro')
 
   function setTheme(newTheme: Theme) {
@@ -30,6 +31,7 @@ export const useUserStore = defineStore('user', () => {
     isOnline,
     syncStatus,
     routingStyle,
+    gridStyle,
     theme,
     setTheme,
   }

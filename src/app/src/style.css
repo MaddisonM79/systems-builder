@@ -52,3 +52,25 @@ body,
   max-width: 14px;
   max-height: 14px;
 }
+
+/* Grid background */
+.grid-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.grid-minor-path {
+  stroke: var(--color-base-content);
+  stroke-width: 1.5;
+  stroke-opacity: 0.12;
+}
+
+.grid-major-path {
+  stroke: var(--color-base-content);
+  stroke-width: 2;
+  stroke-opacity: 0.2;
+}

@@ -24,7 +24,7 @@ These are unresolved at the time of project start. Revisit when relevant; do not
 | Project structure | Resolved — monorepo, src/app + src/api + src/packages/* |
 | Build tooling | Resolved — Vite |
 | Package manager | Resolved — pnpm, workspace config via pnpm-workspace.yaml |
-| Grid tile size and snap behavior | TBD |
+| Grid tile size and snap behavior | Resolved — minor cell 20px, major cell 200px (10×10), snap 20px |
 | Save conflict resolution strategy | **Resolved** — user-prompted; show Save Snapshots for both devices; Kill Flag written to losing device; see AI_DIRECTIVES.md |
 | Sync triggers | Resolved — session start + meaningful state changes; conflict detection is API-side |
 | Device presence heartbeat TTL | Resolved in principle (~2-3 min); exact value TBD at implementation |
@@ -176,3 +176,4 @@ At the beginning of a new working session:
 - Do not add "future-proofing" complexity without surfacing it as a named open question first
 - Do not redefine or synonym-ize terms from the Vocabulary in `AI_DIRECTIVES.md`
 - Do not add AI attribution lines to commits (no `Co-Authored-By: Claude` or similar)
+- **Do not commit or push unless the user explicitly asks** — write code, stop, wait for instruction

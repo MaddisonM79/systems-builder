@@ -7,14 +7,11 @@
       :pan-on-scroll="false"
       :pan-on-drag="true"
       :connect-on-click="false"
+      :snap-to-grid="true"
+      :snap-grid="[20, 20]"
       class="w-full h-full bg-base-300"
     >
-      <Background
-        :gap="28"
-        :size="1.5"
-        :pattern-color="'oklch(var(--color-base-content) / 0.08)'"
-        variant="dots"
-      />
+      <GridBackground />
     </VueFlow>
 
   </div>
@@ -23,13 +20,15 @@
 <script setup lang="ts">
 import { onMounted, nextTick, markRaw } from 'vue'
 import { VueFlow, useVueFlow, type Node, type Edge, type Connection as VFConnection } from '@vue-flow/core'
-import { Background } from '@vue-flow/background'
 import { useBoardStore } from '@/stores/board'
+import { usePersistence } from '@/composables/usePersistence'
 import type { Card, Connection } from '@/engine/graph'
 import CardNode from './CardNode.vue'
+import GridBackground from './GridBackground.vue'
 
 const boardStore = useBoardStore()
 const { addNodes, addEdges, onConnect: vfOnConnect, onNodeDragStop: vfOnNodeDragStop, fitView } = useVueFlow()
+const { load } = usePersistence()
 
 const nodeTypes = { card: markRaw(CardNode) as any }
 
@@ -125,7 +124,9 @@ function seedBoard() {
 }
 
 onMounted(async () => {
-  seedBoard()
+  const hasSave = await load()
+  if (!hasSave) seedBoard()
+
   addNodes(Array.from(boardStore.cards.values()).map(cardToNode))
   addEdges(Array.from(boardStore.connections.values()).map(connectionToEdge))
   await nextTick()

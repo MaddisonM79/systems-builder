@@ -1,16 +1,7 @@
 <template>
-  <div id="system-builder">
-    <!-- Desktop goes here -->
-  </div>
+  <Desktop />
 </template>
 
 <script setup lang="ts">
+import Desktop from '@/components/Desktop.vue'
 </script>
-
-<style scoped>
-#system-builder {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-}
-</style>

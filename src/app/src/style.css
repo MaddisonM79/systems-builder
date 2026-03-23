@@ -1,0 +1,59 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0a0f;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: #e2e8f0;
+}
+
+/* Vue Flow dark theme overrides */
+.vue-flow__edge-path {
+  stroke: #3b6fd4;
+  stroke-width: 2;
+}
+
+.vue-flow__edge.selected .vue-flow__edge-path,
+.vue-flow__edge:hover .vue-flow__edge-path {
+  stroke: #60a5fa;
+}
+
+.vue-flow__connection-path {
+  stroke: #4ade80;
+  stroke-width: 2;
+  stroke-dasharray: 5;
+}
+
+.vue-flow__controls {
+  background: #141420;
+  border: 1px solid #2a2a4e;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.vue-flow__controls-button {
+  background: #141420;
+  border-color: #2a2a4e;
+  color: #94a3b8;
+}
+
+.vue-flow__controls-button:hover {
+  background: #1e1e30;
+  color: #e2e8f0;
+}
+
+.vue-flow__controls-button svg {
+  fill: currentColor;
+  max-width: 14px;
+  max-height: 14px;
+}

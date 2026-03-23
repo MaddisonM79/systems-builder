@@ -1,0 +1,25 @@
+{
+  "name": "@system-builder/api",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.4.0",
+    "@system-builder/constants": "workspace:*",
+    "@system-builder/db": "workspace:*",
+    "@system-builder/schemas": "workspace:*",
+    "@system-builder/types": "workspace:*",
+    "hono": "^4.6.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241022.0",
+    "typescript": "^5.6.0",
+    "wrangler": "^3.80.0"
+  }
+}

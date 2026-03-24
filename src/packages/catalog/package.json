@@ -1,0 +1,14 @@
+{
+  "name": "@system-builder/catalog",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./src/index.ts",
+  "dependencies": {
+    "@system-builder/constants": "workspace:*",
+    "@system-builder/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

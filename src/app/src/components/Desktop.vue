@@ -9,6 +9,12 @@
       :connect-on-click="false"
       :snap-to-grid="true"
       :snap-grid="[20, 20]"
+      :is-valid-connection="isValidConnection"
+      :delete-key-code="['Backspace', 'Delete']"
+      :edges-updatable="true"
+      @edge-update-start="onEdgeUpdateStart"
+      @edge-update="onEdgeUpdate"
+      @edge-update-end="onEdgeUpdateEnd"
       class="w-full h-full bg-base-300"
     >
       <GridBackground />
@@ -18,24 +24,58 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, nextTick, markRaw } from 'vue'
-import { VueFlow, useVueFlow, type Node, type Edge, type Connection as VFConnection } from '@vue-flow/core'
+import { onMounted, nextTick, markRaw, computed, watch } from 'vue'
+import {
+  VueFlow, useVueFlow,
+  type Node, type Edge,
+  type Connection as VFConnection,
+  type NodeRemoveChange,
+  type EdgeRemoveChange,
+  type EdgeUpdateEvent,
+  type EdgeMouseEvent,
+} from '@vue-flow/core'
 import { useBoardStore } from '@/stores/board'
+import { useUserStore } from '@/stores/user'
 import { usePersistence } from '@/composables/usePersistence'
 import type { Card, Connection } from '@/engine/graph'
 import CardNode from './CardNode.vue'
 import GridBackground from './GridBackground.vue'
 
 const boardStore = useBoardStore()
-const { addNodes, addEdges, onConnect: vfOnConnect, onNodeDragStop: vfOnNodeDragStop, fitView } = useVueFlow()
+const userStore  = useUserStore()
+const {
+  addNodes, addEdges, fitView,
+  onConnect: vfOnConnect,
+  onNodeDragStop: vfOnNodeDragStop,
+  onNodesChange: vfOnNodesChange,
+  onEdgesChange: vfOnEdgesChange,
+  updateEdge,
+  removeEdges,
+  getEdges,
+  edges: vfEdges,
+} = useVueFlow()
 const { load } = usePersistence()
 
 const nodeTypes = { card: markRaw(CardNode) as any }
 
-const defaultEdgeOptions = {
-  type: 'smoothstep',
+const ROUTING_TYPE_MAP = {
+  orthogonal: 'step',
+  rounded:    'smoothstep',
+  straight:   'straight',
+} as const
+
+const edgeType = computed(() => ROUTING_TYPE_MAP[userStore.routingStyle])
+
+const defaultEdgeOptions = computed(() => ({
+  type: edgeType.value,
   animated: true,
-}
+}))
+
+watch(edgeType, (type) => {
+  for (const edge of vfEdges.value) {
+    edge.type = type
+  }
+})
 
 function cardToNode(card: Card): Node {
   return {
@@ -58,7 +98,7 @@ function connectionToEdge(conn: Connection): Edge {
     sourceHandle: conn.sourcePortId,
     target: conn.targetCardId,
     targetHandle: conn.targetPortId,
-    type: 'smoothstep',
+    type: edgeType.value,
     animated: true,
   }
 }
@@ -143,10 +183,59 @@ vfOnConnect((params: VFConnection) => {
     targetCardId: params.target,
     targetPortId: params.targetHandle,
   })
-  addEdges([{ id: connId, source: params.source, sourceHandle: params.sourceHandle, target: params.target, targetHandle: params.targetHandle, type: 'smoothstep', animated: true }])
+  addEdges([{ id: connId, source: params.source, sourceHandle: params.sourceHandle, target: params.target, targetHandle: params.targetHandle, type: edgeType.value, animated: true }])
 })
 
 vfOnNodeDragStop(({ node }) => {
   boardStore.updateCard(node.id, { position: node.position })
+})
+
+// Prevent self-connections and duplicate port connections
+function isValidConnection(connection: VFConnection): boolean {
+  if (connection.source === connection.target) return false
+  const targetAlreadyConnected = getEdges.value.some(
+    e => e.target === connection.target && e.targetHandle === connection.targetHandle,
+  )
+  return !targetAlreadyConnected
+}
+
+// Edge reconnect — drag either endpoint to a new handle, or drop in empty space to disconnect
+let edgeUpdateSuccessful = false
+
+function onEdgeUpdateStart() {
+  edgeUpdateSuccessful = false
+}
+
+function onEdgeUpdate({ edge, connection }: EdgeUpdateEvent) {
+  if (!connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return
+  edgeUpdateSuccessful = true
+  updateEdge(edge, connection)
+  boardStore.removeConnection(edge.id)
+  boardStore.addConnection({
+    id: edge.id,
+    sourceCardId: connection.source,
+    sourcePortId: connection.sourceHandle,
+    targetCardId: connection.target,
+    targetPortId: connection.targetHandle,
+  })
+}
+
+function onEdgeUpdateEnd({ edge }: EdgeMouseEvent) {
+  if (!edgeUpdateSuccessful) {
+    removeEdges([edge.id])
+    // vfOnEdgesChange 'remove' fires from removeEdges → boardStore.removeConnection called there
+  }
+}
+
+vfOnEdgesChange((changes) => {
+  changes
+    .filter((c): c is EdgeRemoveChange => c.type === 'remove')
+    .forEach(c => boardStore.removeConnection(c.id))
+})
+
+vfOnNodesChange((changes) => {
+  changes
+    .filter((c): c is NodeRemoveChange => c.type === 'remove')
+    .forEach(c => boardStore.removeCard(c.id))
 })
 </script>

@@ -37,6 +37,22 @@ import type { RefinerDefinition } from '@system-builder/schemas'
 
 export const refiners: RefinerDefinition[] = [
   {
+    id: 'oil_house',
+    archetype: 'refiner',
+    displayName: 'Oil House',
+    description: 'Burns oil to further upgrade energy value by 2 Coin per unit.',
+    unlockCondition: { type: 'coin', amount: 200 }, // non-free — hidden until upgrade purchased
+    placementCost: null,
+    refinerMode: {
+      mode: 'upgrade',
+      acceptedResources: ['energy'],
+      resourceType: 'energy',
+      valueBonus: 2,
+      slotCost: 1,
+    },
+    flow: { mode: 'continuous', ratePerSecond: 1 },
+  },
+  {
     id: 'coal_house',
     archetype: 'refiner',
     displayName: 'Coal House',

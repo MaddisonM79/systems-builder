@@ -8,6 +8,18 @@
       </span>
     </div>
 
+    <!-- Centre: currency display -->
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-1.5 text-xs font-medium text-base-content/70">
+        <span class="text-base leading-none">🪙</span>
+        <span>{{ simStore.coin.toLocaleString() }}</span>
+      </div>
+      <div v-if="simStore.researchPoints > 0" class="flex items-center gap-1.5 text-xs font-medium text-base-content/70">
+        <span class="text-base leading-none">🔬</span>
+        <span>{{ simStore.researchPoints.toLocaleString() }}</span>
+      </div>
+    </div>
+
     <!-- Right: settings + help + user profile -->
     <div class="flex items-center gap-3">
       <button
@@ -36,9 +48,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useSimStore } from '@/stores/sim'
 import UserProfile from './UserProfile.vue'
 import HelpModal from './HelpModal.vue'
 import SettingsModal from './SettingsModal.vue'
+
+const simStore = useSimStore()
 
 const showHelp     = ref(false)
 const showSettings = ref(false)

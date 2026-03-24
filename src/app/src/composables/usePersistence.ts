@@ -5,6 +5,9 @@ import { useGameStore } from '@/stores/game'
 import { useUserStore } from '@/stores/user'
 import { loadSave, writeSave, getOrCreateDeviceId } from '@/persistence'
 import { serialize, deserialize } from '@/persistence/serializer'
+import { getSimBufferContents } from '@/composables/useGameLoop'
+import { createCard } from '@/engine/registry'
+import { catalog } from '@system-builder/catalog'
 import type { SaveV1 } from '@system-builder/schemas'
 
 const DEBOUNCE_MS = 1500
@@ -22,15 +25,16 @@ export function usePersistence() {
 
   function buildSnapshot() {
     return {
-      cards:           boardStore.cards,
-      connections:     boardStore.connections,
-      coin:            simStore.coin,
-      researchPoints:  simStore.researchPoints,
-      cardXp:          simStore.cardXp,
-      cardLevels:      simStore.cardLevels,
-      poolLevels:      simStore.poolLevels,
-      prestigeCount:   gameStore.prestigeCount,
-      unlockedCardIds: gameStore.unlockedCardIds,
+      cards:             boardStore.cards,
+      connections:       boardStore.connections,
+      coin:              simStore.coin,
+      researchPoints:    simStore.researchPoints,
+      cardXp:            simStore.cardXp,
+      cardLevels:        simStore.cardLevels,
+      poolLevels:        simStore.poolLevels,
+      bufferContents:    getSimBufferContents(),
+      prestigeCount:     gameStore.prestigeCount,
+      purchasedUpgrades: gameStore.purchasedUpgrades,
     }
   }
 
@@ -56,7 +60,7 @@ export function usePersistence() {
 
   // Sim and game stores use plain refs
   watch([() => simStore.coin, () => simStore.researchPoints], scheduleSave, { flush: 'post' })
-  watch([() => gameStore.prestigeCount, () => gameStore.unlockedCardIds], scheduleSave, { flush: 'post' })
+  watch([() => gameStore.prestigeCount, () => gameStore.purchasedUpgrades], scheduleSave, { flush: 'post' })
 
   async function load(): Promise<boolean> {
     hydrating = true
@@ -70,15 +74,27 @@ export function usePersistence() {
       lastSave = save
 
       const state = deserialize(save)
-      state.cards.forEach(card => boardStore.addCard(card))
+      // Ports are not stored in the save — reconstruct from catalog definition on load.
+      // This keeps the save lean and ports always in sync with catalog changes.
+      state.cards.forEach(savedCard => {
+        const def = catalog.find(d => d.id === savedCard.typeId)
+        if (!def) {
+          console.warn(`[persistence] Unknown card typeId "${savedCard.typeId}" — skipping`)
+          return
+        }
+        const card = createCard(def, savedCard.id, savedCard.position)
+        card.outputRouting = savedCard.outputRouting
+        boardStore.addCard(card)
+      })
       state.connections.forEach(conn => boardStore.addConnection(conn))
       simStore.coin            = state.coin
       simStore.researchPoints  = state.researchPoints
-      simStore.cardXp    = state.cardXp
-      simStore.cardLevels = state.cardLevels
-      simStore.poolLevels = state.poolLevels
-      gameStore.prestigeCount  = state.prestigeCount
-      gameStore.unlockedCardIds = state.unlockedCardIds
+      simStore.cardXp          = state.cardXp
+      simStore.cardLevels      = state.cardLevels
+      simStore.poolLevels      = state.poolLevels
+      simStore.bufferContents  = state.bufferContents
+      gameStore.prestigeCount    = state.prestigeCount
+      gameStore.purchasedUpgrades = state.purchasedUpgrades
 
       return true
     } catch (err) {

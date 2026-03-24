@@ -44,6 +44,9 @@ importers:
 
   src/app:
     dependencies:
+      '@system-builder/catalog':
+        specifier: workspace:*
+        version: link:../packages/catalog
       '@system-builder/constants':
         specifier: workspace:*
         version: link:../packages/constants

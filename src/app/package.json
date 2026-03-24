@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@system-builder/catalog": "workspace:*",
     "@system-builder/constants": "workspace:*",
     "@system-builder/schemas": "workspace:*",
     "@system-builder/types": "workspace:*",

@@ -7,6 +7,7 @@ import { combiners } from './combiners'
 import { converters } from './converters'
 import { storage } from './storage'
 import { items } from './items'
+import { upgrades } from './upgrades'
 
 // Full card catalog — imported by the app engine registry and the API catalog route
 export const catalog: CardDefinition[] = [
@@ -20,4 +21,4 @@ export const catalog: CardDefinition[] = [
 ]
 
 export type { CardDefinition, ItemDefinition }
-export { generators, refiners, sellers, splitters, combiners, converters, storage, items }
+export { generators, refiners, sellers, splitters, combiners, converters, storage, items, upgrades }

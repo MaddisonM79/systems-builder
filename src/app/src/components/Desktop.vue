@@ -15,16 +15,23 @@
       @edge-update-start="onEdgeUpdateStart"
       @edge-update="onEdgeUpdate"
       @edge-update-end="onEdgeUpdateEnd"
+      @dragover.prevent
+      @drop="onDrop"
       class="w-full h-full bg-base-300"
     >
       <GridBackground />
     </VueFlow>
 
+    <Transition name="build-menu">
+      <BuildMenu v-if="showBuildMenu" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10" />
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, nextTick, markRaw, computed, watch } from 'vue'
+
+defineProps<{ showBuildMenu: boolean }>()
 import {
   VueFlow, useVueFlow,
   type Node, type Edge,
@@ -38,8 +45,11 @@ import { useBoardStore } from '@/stores/board'
 import { useUserStore } from '@/stores/user'
 import { usePersistence } from '@/composables/usePersistence'
 import type { Card, Connection } from '@/engine/graph'
+import { createCard } from '@/engine/registry'
+import { catalog } from '@system-builder/catalog'
 import CardNode from './CardNode.vue'
 import GridBackground from './GridBackground.vue'
+import BuildMenu from './BuildMenu.vue'
 
 const boardStore = useBoardStore()
 const userStore  = useUserStore()
@@ -53,6 +63,7 @@ const {
   removeEdges,
   getEdges,
   edges: vfEdges,
+  screenToFlowCoordinate,
 } = useVueFlow()
 const { load } = usePersistence()
 
@@ -77,16 +88,26 @@ watch(edgeType, (type) => {
   }
 })
 
+function genRateLabel(card: Card): string | null {
+  if (card.archetype !== 'generator') return null
+  const def = catalog.find(d => d.id === card.typeId)
+  if (!def || def.archetype !== 'generator') return null
+  return def.flow.mode === 'continuous'
+    ? `${def.flow.ratePerSecond}/s`
+    : `${def.flow.batchSize} per ${def.flow.intervalSeconds}s`
+}
+
 function cardToNode(card: Card): Node {
   return {
     id: card.id,
     type: 'card',
     position: card.position,
     data: {
-      title: card.title,
+      title:     card.title,
       archetype: card.archetype,
-      inputs: card.inputs,
-      outputs: card.outputs,
+      inputs:    card.inputs,
+      outputs:   card.outputs,
+      rateLabel: genRateLabel(card),
     },
   }
 }
@@ -103,75 +124,42 @@ function connectionToEdge(conn: Connection): Edge {
   }
 }
 
-function seedBoard() {
-  if (boardStore.cards.size > 0) return
-
-  const cards: Card[] = [
-    {
-      id: 'card-wood-gen',
-      archetype: 'generator',
-      title: 'Wood Source',
-      position: { x: 80, y: 200 },
-      inputs: [],
-      outputs: [{ id: 'port-wood-gen-out', side: 'output', label: 'Wood', resourceType: 'wood' }],
-    },
-    {
-      id: 'card-refiner',
-      archetype: 'refiner',
-      title: 'Wood Refiner',
-      position: { x: 380, y: 200 },
-      inputs: [{ id: 'port-refiner-in', side: 'input', label: 'Raw Wood', resourceType: 'wood' }],
-      outputs: [{ id: 'port-refiner-out', side: 'output', label: 'Lumber', resourceType: 'lumber' }],
-    },
-    {
-      id: 'card-splitter',
-      archetype: 'splitter',
-      title: 'Lumber Split',
-      position: { x: 680, y: 150 },
-      inputs: [{ id: 'port-splitter-in', side: 'input', label: 'Lumber', resourceType: 'lumber' }],
-      outputs: [
-        { id: 'port-splitter-out-a', side: 'output', label: 'Batch A', resourceType: 'lumber' },
-        { id: 'port-splitter-out-b', side: 'output', label: 'Batch B', resourceType: 'lumber' },
-      ],
-    },
-    {
-      id: 'card-market',
-      archetype: 'seller',
-      title: 'Market',
-      position: { x: 980, y: 80 },
-      inputs: [{ id: 'port-market-in', side: 'input', label: 'Lumber', resourceType: 'lumber' }],
-      outputs: [],
-    },
-    {
-      id: 'card-workshop',
-      archetype: 'seller',
-      title: 'Workshop',
-      position: { x: 980, y: 290 },
-      inputs: [{ id: 'port-workshop-in', side: 'input', label: 'Lumber', resourceType: 'lumber' }],
-      outputs: [],
-    },
-  ]
-
-  const connections: Connection[] = [
-    { id: 'conn-gen-refiner',     sourceCardId: 'card-wood-gen', sourcePortId: 'port-wood-gen-out',    targetCardId: 'card-refiner',  targetPortId: 'port-refiner-in' },
-    { id: 'conn-refiner-splitter', sourceCardId: 'card-refiner',  sourcePortId: 'port-refiner-out',    targetCardId: 'card-splitter', targetPortId: 'port-splitter-in' },
-    { id: 'conn-splitter-market',  sourceCardId: 'card-splitter', sourcePortId: 'port-splitter-out-a', targetCardId: 'card-market',   targetPortId: 'port-market-in' },
-    { id: 'conn-splitter-workshop', sourceCardId: 'card-splitter', sourcePortId: 'port-splitter-out-b', targetCardId: 'card-workshop', targetPortId: 'port-workshop-in' },
-  ]
-
-  cards.forEach(card => boardStore.addCard(card))
-  connections.forEach(conn => boardStore.addConnection(conn))
-}
-
 onMounted(async () => {
-  const hasSave = await load()
-  if (!hasSave) seedBoard()
+  await load()
 
   addNodes(Array.from(boardStore.cards.values()).map(cardToNode))
   addEdges(Array.from(boardStore.connections.values()).map(connectionToEdge))
   await nextTick()
   fitView({ padding: 0.15 })
 })
+
+// Drop a card from the BuildMenu onto the canvas
+function onDrop(event: DragEvent) {
+  const raw = event.dataTransfer?.getData('text/plain')
+  if (!raw) return
+
+  let payload: { typeId: string; offsetX: number; offsetY: number }
+  try {
+    payload = JSON.parse(raw)
+  } catch {
+    return
+  }
+
+  const def = catalog.find(d => d.id === payload.typeId)
+  if (!def) return
+
+  // Convert screen coords → flow canvas coords, offset by where the user grabbed the chip
+  const position = screenToFlowCoordinate({
+    x: event.clientX - (payload.offsetX ?? 0),
+    y: event.clientY - (payload.offsetY ?? 0),
+  })
+
+  const id = crypto.randomUUID()
+  const card = createCard(def, id, position)
+
+  boardStore.addCard(card)
+  addNodes([cardToNode(card)])
+}
 
 vfOnConnect((params: VFConnection) => {
   if (!params.source || !params.target || !params.sourceHandle || !params.targetHandle) return
@@ -239,3 +227,15 @@ vfOnNodesChange((changes) => {
     .forEach(c => boardStore.removeCard(c.id))
 })
 </script>
+
+<style scoped>
+.build-menu-enter-active,
+.build-menu-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.build-menu-enter-from,
+.build-menu-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(8px);
+}
+</style>

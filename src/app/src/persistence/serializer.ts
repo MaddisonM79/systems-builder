@@ -1,6 +1,7 @@
 // Pure serialization helpers — no Vue, no Pinia imports
 import type { SaveV1 } from '@system-builder/schemas'
 import type { Card, Connection } from '@/engine/graph'
+import type { BufferContents } from '@/engine/simulation'
 
 export type StoreSnapshot = {
   cards: Map<string, Card>
@@ -10,8 +11,9 @@ export type StoreSnapshot = {
   cardXp: Record<string, number>
   cardLevels: Record<string, number>
   poolLevels: Record<string, number>
+  bufferContents: BufferContents
   prestigeCount: number
-  unlockedCardIds: string[]
+  purchasedUpgrades: Record<string, number>
 }
 
 export type HydratedState = {
@@ -22,8 +24,9 @@ export type HydratedState = {
   cardXp: Record<string, number>
   cardLevels: Record<string, number>
   poolLevels: Record<string, number>
+  bufferContents: BufferContents
   prestigeCount: number
-  unlockedCardIds: string[]
+  purchasedUpgrades: Record<string, number>
 }
 
 export function serialize(snapshot: StoreSnapshot, prev: SaveV1 | null): SaveV1 {
@@ -42,10 +45,11 @@ export function serialize(snapshot: StoreSnapshot, prev: SaveV1 | null): SaveV1 
       cardXp: { ...snapshot.cardXp },
       cardLevels: { ...snapshot.cardLevels },
       poolLevels: { ...snapshot.poolLevels },
+      bufferContents: { ...snapshot.bufferContents },
     },
     game: {
       prestigeCount: snapshot.prestigeCount,
-      unlockedCardIds: [...snapshot.unlockedCardIds],
+      purchasedUpgrades: { ...snapshot.purchasedUpgrades },
     },
   }
 }
@@ -59,7 +63,8 @@ export function deserialize(save: SaveV1): HydratedState {
     cardXp: save.sim.cardXp,
     cardLevels: save.sim.cardLevels,
     poolLevels: save.sim.poolLevels,
+    bufferContents: save.sim.bufferContents,
     prestigeCount: save.game.prestigeCount,
-    unlockedCardIds: save.game.unlockedCardIds,
+    purchasedUpgrades: save.game.purchasedUpgrades,
   }
 }

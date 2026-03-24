@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { CARD_ARCHETYPES, CURRENT_SAVE_VERSION } from '@system-builder/constants'
+import { AppliedBonusSchema } from './item'
 
 // ---------- Nested schemas ----------
 
@@ -66,11 +67,18 @@ export const SaveV1Schema = z.object({
     cardLevels: z.record(z.string(), z.number()),
     // Current pool amount per card (CardId → units stored)
     poolLevels: z.record(z.string(), z.number()),
+    // Per-port buffer snapshot (portId → { resourceType, count })
+    // Older saves without this field default to empty — buffers start from zero
+    bufferContents: z.record(z.string(), z.object({
+      resourceType:   z.string(),
+      appliedBonuses: z.array(z.array(AppliedBonusSchema)),  // one inner array per item
+    })).default({}),
   }),
 
   game: z.object({
     prestigeCount: z.number().int().nonnegative(),
-    unlockedCardIds: z.array(z.string()),
+    // upgradeId → number of times purchased; old saves missing this field default to {}
+    purchasedUpgrades: z.record(z.string(), z.number()).default({}),
   }),
 })
 

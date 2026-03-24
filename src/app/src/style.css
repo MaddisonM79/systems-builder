@@ -14,13 +14,13 @@ body,
 
 /* Vue Flow — theme-aware overrides using DaisyUI CSS vars */
 .vue-flow__edge-path {
-  stroke: var(--color-primary);
+  stroke: #60a5fa;
   stroke-width: 2;
 }
 
 .vue-flow__edge.selected .vue-flow__edge-path,
 .vue-flow__edge:hover .vue-flow__edge-path {
-  stroke: var(--color-secondary);
+  stroke: #93c5fd;
 }
 
 .vue-flow__connection-path {

@@ -61,6 +61,19 @@
           </div>
         </div>
 
+        <!-- Display -->
+        <div>
+          <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-3">Display</div>
+          <label class="flex items-center justify-between cursor-pointer">
+            <span class="text-sm text-base-content/70">Buffer fill indicators</span>
+            <input type="checkbox" class="toggle toggle-sm toggle-primary" v-model="userStore.showBufferFill" />
+          </label>
+          <label class="flex items-center justify-between cursor-pointer mt-2">
+            <span class="text-sm text-base-content/70">Buffer item counts</span>
+            <input type="checkbox" class="toggle toggle-sm toggle-primary" v-model="userStore.showBufferCount" />
+          </label>
+        </div>
+
       </div>
 
     </div>

@@ -1,22 +1,36 @@
 import { z } from 'zod'
-import { CURRENT_SAVE_VERSION } from '@system-builder/constants'
+import { CARD_ARCHETYPES, CURRENT_SAVE_VERSION } from '@system-builder/constants'
 
 // ---------- Nested schemas ----------
 
-const PortSaveSchema = z.object({
-  id: z.string(),
-  side: z.enum(['input', 'output']),
-  label: z.string(),
-  resourceType: z.string(),
-})
+// How flow is distributed across multiple output ports
+const OutputRoutingSaveSchema = z.discriminatedUnion('mode', [
+  z.object({ mode: z.literal('even') }),
+  z.object({
+    mode: z.literal('weighted'),
+    // One weight per output port; must sum to 100 — enforced by engine, not schema
+    weights: z.array(z.number()),
+  }),
+])
 
 const CardSaveSchema = z.object({
   id: z.string(),
-  archetype: z.string(),
+  typeId: z.string(),                              // references CardDefinition.id in catalog
+  archetype: z.enum([                              // denormalized — engine needs this without catalog
+    CARD_ARCHETYPES.GENERATOR,
+    CARD_ARCHETYPES.REFINER,
+    CARD_ARCHETYPES.SELLER,
+    CARD_ARCHETYPES.SPLITTER,
+    CARD_ARCHETYPES.COMBINER,
+    CARD_ARCHETYPES.CONVERTER,
+    CARD_ARCHETYPES.STORAGE,
+  ]),
   title: z.string(),
   position: z.object({ x: z.number(), y: z.number() }),
-  inputs: z.array(PortSaveSchema),
-  outputs: z.array(PortSaveSchema),
+  // Port count overrides — absent means use the catalog definition's default
+  inputPortCount: z.number().int().positive().optional(),
+  outputPortCount: z.number().int().positive().optional(),
+  outputRouting: OutputRoutingSaveSchema,
 })
 
 const ConnectionSaveSchema = z.object({
@@ -47,6 +61,11 @@ export const SaveV1Schema = z.object({
   sim: z.object({
     coin: z.number(),
     researchPoints: z.number(),
+    // Per-card-instance XP and level (CardId → value)
+    cardXp: z.record(z.string(), z.number()),
+    cardLevels: z.record(z.string(), z.number()),
+    // Current pool amount per card (CardId → units stored)
+    poolLevels: z.record(z.string(), z.number()),
   }),
 
   game: z.object({

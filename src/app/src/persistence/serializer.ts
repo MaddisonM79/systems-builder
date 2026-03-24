@@ -7,6 +7,9 @@ export type StoreSnapshot = {
   connections: Map<string, Connection>
   coin: number
   researchPoints: number
+  cardXp: Record<string, number>
+  cardLevels: Record<string, number>
+  poolLevels: Record<string, number>
   prestigeCount: number
   unlockedCardIds: string[]
 }
@@ -16,6 +19,9 @@ export type HydratedState = {
   connections: Connection[]
   coin: number
   researchPoints: number
+  cardXp: Record<string, number>
+  cardLevels: Record<string, number>
+  poolLevels: Record<string, number>
   prestigeCount: number
   unlockedCardIds: string[]
 }
@@ -33,6 +39,9 @@ export function serialize(snapshot: StoreSnapshot, prev: SaveV1 | null): SaveV1 
     sim: {
       coin: snapshot.coin,
       researchPoints: snapshot.researchPoints,
+      cardXp: { ...snapshot.cardXp },
+      cardLevels: { ...snapshot.cardLevels },
+      poolLevels: { ...snapshot.poolLevels },
     },
     game: {
       prestigeCount: snapshot.prestigeCount,
@@ -47,6 +56,9 @@ export function deserialize(save: SaveV1): HydratedState {
     connections: save.board.connections as Connection[],
     coin: save.sim.coin,
     researchPoints: save.sim.researchPoints,
+    cardXp: save.sim.cardXp,
+    cardLevels: save.sim.cardLevels,
+    poolLevels: save.sim.poolLevels,
     prestigeCount: save.game.prestigeCount,
     unlockedCardIds: save.game.unlockedCardIds,
   }

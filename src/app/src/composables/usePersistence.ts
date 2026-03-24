@@ -26,6 +26,9 @@ export function usePersistence() {
       connections:     boardStore.connections,
       coin:            simStore.coin,
       researchPoints:  simStore.researchPoints,
+      cardXp:          simStore.cardXp,
+      cardLevels:      simStore.cardLevels,
+      poolLevels:      simStore.poolLevels,
       prestigeCount:   gameStore.prestigeCount,
       unlockedCardIds: gameStore.unlockedCardIds,
     }
@@ -71,6 +74,9 @@ export function usePersistence() {
       state.connections.forEach(conn => boardStore.addConnection(conn))
       simStore.coin            = state.coin
       simStore.researchPoints  = state.researchPoints
+      simStore.cardXp    = state.cardXp
+      simStore.cardLevels = state.cardLevels
+      simStore.poolLevels = state.poolLevels
       gameStore.prestigeCount  = state.prestigeCount
       gameStore.unlockedCardIds = state.unlockedCardIds
 

@@ -14,4 +14,17 @@ import type { StorageDefinition } from '@system-builder/schemas'
 //   outputFlow: { mode: 'continuous', ratePerSecond: 5 },
 // }
 
-export const storage: StorageDefinition[] = []
+export const storage: StorageDefinition[] = [
+  {
+    id: 'energy_storage',
+    archetype: 'storage',
+    displayName: 'Energy Storage',
+    description: 'Buffers energy between chain stages.',
+    unlockCondition: { type: 'free' },
+    placementCost: null,
+    resourceType: 'energy',
+    baseCapacity: 100,
+    inputFlow:  { mode: 'continuous', ratePerSecond: 10 },
+    outputFlow: { mode: 'continuous', ratePerSecond: 5 },
+  },
+]

@@ -16,15 +16,15 @@ import type { SellerDefinition } from '@system-builder/schemas'
 
 export const sellers: SellerDefinition[] = [
   {
-    id: 'generic_store',
+    id: 'consumer_energy_grid',
     archetype: 'seller',
-    displayName: 'Store',
-    description: 'Sells items like stuffies.',
+    displayName: 'Consumer Energy Grid',
+    description: 'Sells energy to the consumer grid for coin.',
     unlockCondition: { type: 'free' },
     placementCost: null,
     outputCurrency: 'coin',
     acceptedResources: [
-      { resource: 'stuffie', flow: { mode: 'continuous', ratePerSecond: 1 } },
+      { resource: 'energy', flow: { mode: 'continuous', ratePerSecond: 1 } },
     ],
   },
 ]

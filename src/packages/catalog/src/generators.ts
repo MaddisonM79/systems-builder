@@ -15,13 +15,13 @@ import type { GeneratorDefinition } from '@system-builder/schemas'
 
 export const generators: GeneratorDefinition[] = [
   {
-    id: 'stuffie_fabricator',
+    id: 'energy_plant',
     archetype: 'generator',
-    displayName: 'Stuffie Machine',
-    description: 'Produces stuffies for selling.',
+    displayName: 'Energy Plant',
+    description: 'Generates a continuous stream of raw energy.',
     unlockCondition: { type: 'free' },
     placementCost: null,
-    outputResource: 'stuffie',
+    outputResource: 'energy',
     defaultOutputPortCount: 1,
     flow: { mode: 'continuous', ratePerSecond: 1 },
   },

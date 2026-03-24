@@ -35,4 +35,21 @@ import type { RefinerDefinition } from '@system-builder/schemas'
 //   flow: { mode: 'continuous', ratePerSecond: 1 },
 // }
 
-export const refiners: RefinerDefinition[] = []
+export const refiners: RefinerDefinition[] = [
+  {
+    id: 'coal_house',
+    archetype: 'refiner',
+    displayName: 'Coal House',
+    description: 'Burns coal to upgrade energy value by 1 coin per unit.',
+    unlockCondition: { type: 'free' },
+    placementCost: null,
+    refinerMode: {
+      mode: 'upgrade',
+      acceptedResources: ['energy'],
+      resourceType: 'energy',
+      valueBonus: 1,
+      slotCost: 1,
+    },
+    flow: { mode: 'continuous', ratePerSecond: 1 },
+  },
+]

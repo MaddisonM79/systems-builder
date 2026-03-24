@@ -12,4 +12,15 @@ import type { SplitterDefinition } from '@system-builder/schemas'
 //   defaultOutputPortCount: 2,
 // }
 
-export const splitters: SplitterDefinition[] = []
+export const splitters: SplitterDefinition[] = [
+  {
+    id: 'energy_splitter',
+    archetype: 'splitter',
+    displayName: 'Energy Splitter',
+    description: 'Splits an energy stream evenly across two outputs.',
+    unlockCondition: { type: 'free' },
+    placementCost: null,
+    resourceType: 'energy',
+    defaultOutputPortCount: 2,
+  },
+]

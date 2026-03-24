@@ -84,8 +84,9 @@ export const GeneratorDefinitionSchema = CardDefinitionBaseSchema.extend({
   flow: FlowConfigSchema,
 })
 
-export const RefinerDefinitionSchema = CardDefinitionBaseSchema.extend({
-  archetype: z.literal(CARD_ARCHETYPES.REFINER),
+// Refiner mode: transform (type change) or upgrade (value boost, costs a slot)
+const RefinerModeTransformSchema = z.object({
+  mode: z.literal('transform'),
   inputResource: z.string(),
   outputResource: z.string(),
   // e.g. { inputUnits: 2, outputUnits: 1 } means 2 input units → 1 output unit
@@ -93,19 +94,37 @@ export const RefinerDefinitionSchema = CardDefinitionBaseSchema.extend({
     inputUnits: z.number().positive(),
     outputUnits: z.number().positive(),
   }),
+})
+
+const RefinerModeUpgradeSchema = z.object({
+  mode: z.literal('upgrade'),
+  // 'any' = works on all item types; string[] = restricted to specific item type IDs
+  acceptedResources: z.union([z.literal('any'), z.array(z.string()).min(1)]),
+  resourceType: z.string(), // same resource type in and out
+  valueBonus: z.number().positive(),    // flat coin value added per unit
+  slotCost: z.number().int().nonnegative().default(1), // upgrade slots consumed
+})
+
+export const RefinerModeSchema = z.discriminatedUnion('mode', [
+  RefinerModeTransformSchema,
+  RefinerModeUpgradeSchema,
+])
+
+export const RefinerDefinitionSchema = CardDefinitionBaseSchema.extend({
+  archetype: z.literal(CARD_ARCHETYPES.REFINER),
+  refinerMode: RefinerModeSchema,
   flow: FlowConfigSchema,
 })
 
 export const SellerDefinitionSchema = CardDefinitionBaseSchema.extend({
   archetype: z.literal(CARD_ARCHETYPES.SELLER),
-  inputResource: z.string(),
   outputCurrency: z.string(), // CurrencyType — open string
-  // e.g. { resourceUnits: 1, currencyAmount: 5 } means 1 resource → 5 coin
-  conversionRate: z.object({
-    resourceUnits: z.number().positive(),
-    currencyAmount: z.number().positive(),
-  }),
-  flow: FlowConfigSchema,
+  // Each accepted resource is sold independently at its own rate
+  // Revenue per unit = item.effectiveValue (computed by sim from item def + chain)
+  acceptedResources: z.array(z.object({
+    resource: z.string(),
+    flow: FlowConfigSchema,
+  })).min(1),
 })
 
 export const SplitterDefinitionSchema = CardDefinitionBaseSchema.extend({
@@ -162,6 +181,7 @@ export const CardDefinitionSchema = z.discriminatedUnion('archetype', [
 export type CardDefinition         = z.infer<typeof CardDefinitionSchema>
 export type GeneratorDefinition    = z.infer<typeof GeneratorDefinitionSchema>
 export type RefinerDefinition      = z.infer<typeof RefinerDefinitionSchema>
+export type RefinerMode            = z.infer<typeof RefinerModeSchema>
 export type SellerDefinition       = z.infer<typeof SellerDefinitionSchema>
 export type SplitterDefinition     = z.infer<typeof SplitterDefinitionSchema>
 export type CombinerDefinition     = z.infer<typeof CombinerDefinitionSchema>

@@ -14,13 +14,14 @@ export const CURRENT_SAVE_VERSION = 1
 
 // Card archetypes — canonical strings; use these everywhere, never inline literals
 export const CARD_ARCHETYPES = {
-  GENERATOR: 'generator',
-  REFINER:   'refiner',
-  SELLER:    'seller',
-  SPLITTER:  'splitter',
-  COMBINER:  'combiner',
-  CONVERTER: 'converter',
-  STORAGE:   'storage',
+  GENERATOR:  'generator',
+  REFINER:    'refiner',
+  SELLER:     'seller',
+  SPLITTER:   'splitter',
+  COMBINER:   'combiner',
+  CONVERTER:  'converter',
+  STORAGE:    'storage',
+  RESEARCHER: 'researcher',
 } as const
 
 export type CardArchetype = typeof CARD_ARCHETYPES[keyof typeof CARD_ARCHETYPES]
@@ -32,3 +33,11 @@ export const CURRENCY_TYPES = {
 } as const
 
 export type CurrencyType = string
+
+// Economy — global exchange rates between item value and each currency.
+// All consuming cards (Seller, Researcher) read from here — no per-card rate fields.
+// To rebalance the whole economy, change one number here.
+export const ECONOMY = {
+  COIN_PER_VALUE: 1,
+  RP_PER_VALUE:   1,
+} as const

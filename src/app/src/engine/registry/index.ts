@@ -69,6 +69,16 @@ function derivePorts(def: CardDefinition, cardId: string): { inputs: Port[]; out
       return { inputs, outputs: [] }
     }
 
+    case 'researcher': {
+      const inputs: Port[] = def.acceptedResources.map((entry, i) => ({
+        id: `${cardId}:in:${i}`,
+        side: 'input',
+        label: capitalize(entry.resource),
+        resourceType: entry.resource,
+      }))
+      return { inputs, outputs: [] }
+    }
+
     default:
       // Converter and combiner archetypes — no ports derived yet
       return { inputs: [], outputs: [] }

@@ -2,17 +2,19 @@
 import type { CardId, ConnectionId, Card, Connection } from '@/engine/graph'
 import type { CardDefinition, ItemDefinition } from '@system-builder/schemas'
 import type { AppliedBonus, FlowItem } from '@system-builder/schemas'
+import { ECONOMY } from '@system-builder/constants'
 
 // ─── Buffer capacities ────────────────────────────────────────────────────────
 
 const CAP = {
-  GENERATOR_OUT: 10,
-  REFINER_IN:    5,
-  REFINER_OUT:   5,
-  STORAGE_OUT:   5,
-  SPLITTER_IN:   5,
-  SPLITTER_OUT:  5,
-  SELLER_IN:     10,
+  GENERATOR_OUT:  10,
+  REFINER_IN:     5,
+  REFINER_OUT:    5,
+  STORAGE_OUT:    5,
+  SPLITTER_IN:    5,
+  SPLITTER_OUT:   5,
+  SELLER_IN:      10,
+  RESEARCHER_IN:  10,
 } as const
 
 // ─── Runtime state per card ───────────────────────────────────────────────────
@@ -320,7 +322,42 @@ export function createSimulation(
 
       const actual = Math.min(consumeCount, inBuf.length)
       for (let j = 0; j < actual; j++) {
-        delta.coinDelta += coinValue(inBuf.shift()!)
+        delta.coinDelta += coinValue(inBuf.shift()!) * ECONOMY.COIN_PER_VALUE
+        delta.cardXpDeltas[cardId] = (delta.cardXpDeltas[cardId] ?? 0) + 1
+      }
+    })
+  }
+
+  function processResearcher(cardId: CardId, dt: number, delta: SimDelta): void {
+    const def = defFor(cardId)
+    const rt  = runtimes.get(cardId)!
+    if (def?.archetype !== 'researcher') return
+
+    def.acceptedResources.forEach((entry, i) => {
+      const portId = `${cardId}:in:${i}`
+      const inBuf  = rt.inputBuffers.get(portId) ?? []
+
+      let consumeCount = 0
+      if (entry.flow.mode === 'continuous') {
+        const acc = getAcc(rt, portId) + entry.flow.ratePerSecond * dt
+        consumeCount = Math.floor(acc)
+        setAcc(rt, portId, acc - consumeCount)
+      } else {
+        const timer = getAcc(rt, `t:${portId}`) + dt
+        if (timer >= entry.flow.intervalSeconds) {
+          consumeCount = entry.flow.batchSize
+          setAcc(rt, `t:${portId}`, timer - entry.flow.intervalSeconds)
+        } else {
+          setAcc(rt, `t:${portId}`, timer)
+        }
+      }
+
+      const actual = Math.min(consumeCount, inBuf.length)
+      for (let j = 0; j < actual; j++) {
+        const item    = inBuf.shift()!
+        const itemDef = itemDefs.find(d => d.id === item.resourceType)
+        if (!itemDef?.researchable) continue  // guard — drop non-researchable items
+        delta.researchPointsDelta += coinValue(item) * ECONOMY.RP_PER_VALUE
         delta.cardXpDeltas[cardId] = (delta.cardXpDeltas[cardId] ?? 0) + 1
       }
     })
@@ -341,9 +378,10 @@ export function createSimulation(
       // Determine target input buffer capacity
       const dstDef = defFor(conn.targetCardId)
       let cap: number = CAP.SELLER_IN
-      if      (dstDef?.archetype === 'storage')  cap = dstDef.baseCapacity
-      else if (dstDef?.archetype === 'refiner')  cap = CAP.REFINER_IN
-      else if (dstDef?.archetype === 'splitter') cap = CAP.SPLITTER_IN
+      if      (dstDef?.archetype === 'storage')    cap = dstDef.baseCapacity
+      else if (dstDef?.archetype === 'refiner')    cap = CAP.REFINER_IN
+      else if (dstDef?.archetype === 'splitter')   cap = CAP.SPLITTER_IN
+      else if (dstDef?.archetype === 'researcher') cap = CAP.RESEARCHER_IN
 
       let moved = 0
       while (outBuf.length > 0 && inBuf.length < cap) {
@@ -376,9 +414,10 @@ export function createSimulation(
       switch (def.archetype) {
         case 'generator': processGenerator(cardId, dt);       break
         case 'refiner':   processRefiner(cardId, dt);         break
-        case 'splitter':  processSplitter(cardId);            break
-        case 'storage':   processStorage(cardId, dt, delta);  break
-        case 'seller':    processSeller(cardId, dt, delta);   break
+        case 'splitter':    processSplitter(cardId);              break
+        case 'storage':     processStorage(cardId, dt, delta);    break
+        case 'seller':      processSeller(cardId, dt, delta);     break
+        case 'researcher':  processResearcher(cardId, dt, delta); break
       }
     }
 
@@ -407,10 +446,11 @@ export function createSimulation(
 
       // Input buffer caps
       let inCap = 1
-      if      (def.archetype === 'refiner')  inCap = CAP.REFINER_IN
-      else if (def.archetype === 'splitter') inCap = CAP.SPLITTER_IN
-      else if (def.archetype === 'seller')   inCap = CAP.SELLER_IN
-      else if (def.archetype === 'storage')  inCap = def.baseCapacity
+      if      (def.archetype === 'refiner')     inCap = CAP.REFINER_IN
+      else if (def.archetype === 'splitter')    inCap = CAP.SPLITTER_IN
+      else if (def.archetype === 'seller')      inCap = CAP.SELLER_IN
+      else if (def.archetype === 'researcher')  inCap = CAP.RESEARCHER_IN
+      else if (def.archetype === 'storage')     inCap = def.baseCapacity
       for (const [portId, buf] of rt.inputBuffers) {
         delta.portFill[portId]  = buf.length / inCap
         delta.portCount[portId] = buf.length

@@ -11,6 +11,9 @@ export const ItemDefinitionSchema = z.object({
   // Number of upgrade-mode Refiner slots available by default
   // Expandable via upgrades; overflow Refiners are soft (no value effect)
   baseUpgradeSlots: z.number().int().nonnegative(),
+  // Whether this item type can be consumed by a Researcher card.
+  // false by default — items are coin-only unless explicitly flagged.
+  researchable: z.boolean().default(false),
 })
 
 export type ItemDefinition = z.infer<typeof ItemDefinitionSchema>

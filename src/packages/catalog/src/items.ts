@@ -6,6 +6,7 @@ export const items: ItemDefinition[] = [
     displayName: 'Energy',
     description: 'Raw electrical energy ready to be sold or refined.',
     baseValue: 1,
-    baseUpgradeSlots: 3,
+    baseUpgradeSlots: 2,
+    researchable: true,
   },
 ]

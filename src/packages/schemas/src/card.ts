@@ -166,6 +166,17 @@ export const StorageDefinitionSchema = CardDefinitionBaseSchema.extend({
   outputFlow: FlowConfigSchema,
 })
 
+export const ResearcherDefinitionSchema = CardDefinitionBaseSchema.extend({
+  archetype: z.literal(CARD_ARCHETYPES.RESEARCHER),
+  // Each accepted resource is researched independently at its own flow rate.
+  // RP per unit = coinValue(item) × ECONOMY.RP_PER_VALUE (looked up at runtime from constants).
+  // Only items with researchable: true on their ItemDefinition are consumed.
+  acceptedResources: z.array(z.object({
+    resource: z.string(),
+    flow: FlowConfigSchema,
+  })).min(1),
+})
+
 // ---------- Union ----------
 
 export const CardDefinitionSchema = z.discriminatedUnion('archetype', [
@@ -176,6 +187,7 @@ export const CardDefinitionSchema = z.discriminatedUnion('archetype', [
   CombinerDefinitionSchema,
   ConverterDefinitionSchema,
   StorageDefinitionSchema,
+  ResearcherDefinitionSchema,
 ])
 
 export type CardDefinition         = z.infer<typeof CardDefinitionSchema>
@@ -187,3 +199,4 @@ export type SplitterDefinition     = z.infer<typeof SplitterDefinitionSchema>
 export type CombinerDefinition     = z.infer<typeof CombinerDefinitionSchema>
 export type ConverterDefinition    = z.infer<typeof ConverterDefinitionSchema>
 export type StorageDefinition      = z.infer<typeof StorageDefinitionSchema>
+export type ResearcherDefinition   = z.infer<typeof ResearcherDefinitionSchema>

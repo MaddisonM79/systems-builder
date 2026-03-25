@@ -25,6 +25,7 @@ const CardSaveSchema = z.object({
     CARD_ARCHETYPES.COMBINER,
     CARD_ARCHETYPES.CONVERTER,
     CARD_ARCHETYPES.STORAGE,
+    CARD_ARCHETYPES.RESEARCHER,
   ]),
   title: z.string(),
   position: z.object({ x: z.number(), y: z.number() }),

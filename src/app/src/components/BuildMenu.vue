@@ -4,12 +4,12 @@
     <div class="flex items-stretch border-b border-base-300/50" style="height: 36px;">
       <button
         v-for="tab in tabs"
-        :key="tab.archetype"
+        :key="tab.id"
         class="flex items-center gap-1.5 px-4 text-xs font-medium transition-colors duration-100"
-        :class="activeTab === tab.archetype
+        :class="activeTab === tab.id
           ? ['text-base-content', 'border-b-2', tab.activeClass]
           : 'text-base-content/40 hover:text-base-content/70'"
-        @click="setTab(tab.archetype)"
+        @click="setTab(tab.id)"
       >
         <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="tab.dotClass" />
         {{ tab.label }}
@@ -58,41 +58,42 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { CardArchetype } from '@system-builder/constants'
 import type { CardDefinition, UnlockCondition } from '@system-builder/schemas'
-import { generators, refiners, sellers, splitters, storage } from '@system-builder/catalog'
+import { generators, refiners, sellers, splitters, combiners, storage, researchers } from '@system-builder/catalog'
 import { useGameStore } from '@/stores/game'
 import BuildMenuItem from './BuildMenuItem.vue'
 
 const gameStore = useGameStore()
 
-// All archetype tab configs — static so Tailwind bundles all classes
+// All archetype tab configs — static so Tailwind bundles all classes.
+// `id` is the unique tab key; a tab may contain cards from multiple archetypes.
 const ALL_TABS: Array<{
-  archetype: CardArchetype
+  id: string
   label: string
   cards: CardDefinition[]
   dotClass: string
   activeClass: string
 }> = [
-  { archetype: 'generator', label: 'Generator', cards: generators, dotClass: 'bg-success',   activeClass: 'border-success' },
-  { archetype: 'refiner',   label: 'Refiner',   cards: refiners,   dotClass: 'bg-info',      activeClass: 'border-info' },
-  { archetype: 'storage',   label: 'Storage',   cards: storage,    dotClass: 'bg-accent',    activeClass: 'border-accent' },
-  { archetype: 'splitter',  label: 'Splitter',  cards: splitters,  dotClass: 'bg-secondary', activeClass: 'border-secondary' },
-  { archetype: 'seller',    label: 'Seller',    cards: sellers,    dotClass: 'bg-warning',   activeClass: 'border-warning' },
+  { id: 'generator',  label: 'Generator',  cards: generators,                   dotClass: 'bg-success',   activeClass: 'border-success' },
+  { id: 'refiner',    label: 'Refiner',    cards: refiners,                     dotClass: 'bg-info',      activeClass: 'border-info' },
+  { id: 'storage',    label: 'Storage',    cards: storage,                      dotClass: 'bg-accent',    activeClass: 'border-accent' },
+  { id: 'routing',    label: 'Routing',    cards: [...splitters, ...combiners], dotClass: 'bg-secondary', activeClass: 'border-secondary' },
+  { id: 'seller',     label: 'Seller',     cards: sellers,                      dotClass: 'bg-warning',   activeClass: 'border-warning' },
+  { id: 'researcher', label: 'Researcher', cards: researchers,                  dotClass: 'bg-primary',   activeClass: 'border-primary' },
 ]
 
 const tabs = ALL_TABS.filter(t => t.cards.length > 0)
 
-const activeTab = ref<CardArchetype>(tabs[0]?.archetype ?? 'generator')
+const activeTab = ref<string>(tabs[0]?.id ?? 'generator')
 const selectedDef = ref<CardDefinition | null>(null)
 
 const activeCards = computed<CardDefinition[]>(() => {
-  const all = ALL_TABS.find(t => t.archetype === activeTab.value)?.cards ?? []
+  const all = ALL_TABS.find(t => t.id === activeTab.value)?.cards ?? []
   return all.filter(d => gameStore.unlockedCardIds.has(d.id))
 })
 
-function setTab(archetype: CardArchetype) {
-  activeTab.value = archetype
+function setTab(id: string) {
+  activeTab.value = id
   selectedDef.value = null
 }
 
@@ -139,6 +140,11 @@ function cardStats(def: CardDefinition): string[] {
     case 'seller': {
       const resources = def.acceptedResources.map(r => cap(r.resource)).join(', ')
       return [`Buys: ${resources}`, `Pays: ${cap(def.outputCurrency)}`]
+    }
+
+    case 'researcher': {
+      const resources = def.acceptedResources.map(r => cap(r.resource)).join(', ')
+      return [`Researches: ${resources}`, `Outputs: RP`]
     }
 
     default:

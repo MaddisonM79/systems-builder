@@ -6,6 +6,7 @@ import { splitters } from './splitters'
 import { combiners } from './combiners'
 import { converters } from './converters'
 import { storage } from './storage'
+import { researchers } from './researchers'
 import { items } from './items'
 import { upgrades } from './upgrades'
 
@@ -18,7 +19,8 @@ export const catalog: CardDefinition[] = [
   ...combiners,
   ...converters,
   ...storage,
+  ...researchers,
 ]
 
 export type { CardDefinition, ItemDefinition }
-export { generators, refiners, sellers, splitters, combiners, converters, storage, items, upgrades }
+export { generators, refiners, sellers, splitters, combiners, converters, storage, researchers, items, upgrades }

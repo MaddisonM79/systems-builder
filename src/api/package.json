@@ -9,13 +9,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.4.0",
+    "@hono/zod-validator": "^0.7.6",
     "@system-builder/constants": "workspace:*",
     "@system-builder/db": "workspace:*",
     "@system-builder/schemas": "workspace:*",
     "@system-builder/types": "workspace:*",
     "hono": "^4.6.0",
-    "zod": "^3.23.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241022.0",

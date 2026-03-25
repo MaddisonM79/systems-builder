@@ -3,6 +3,12 @@ export const API_CODES = {
   SAVE_CONFLICT: 'SAVE_CONFLICT',
 } as const
 
+// KV namespace keys
+export const KV_KEYS = {
+  APP_VERSION: 'app:version',
+  KILL_FLAG: (deviceId: string) => `kill_flag:${deviceId}`,
+} as const
+
 // Device presence — heartbeat TTL while tab is open
 export const DEVICE_HEARTBEAT_TTL_MS = 3 * 60 * 1000   // 3 minutes
 

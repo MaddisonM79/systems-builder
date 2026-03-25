@@ -3,14 +3,14 @@
   "configurations": [
     {
       "name": "app",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@system-builder/app", "dev"],
+      "runtimeExecutable": "/Users/maddisonmarkham/bin/node",
+      "runtimeArgs": ["/Users/maddisonmarkham/Documents/github/system_builder/node_modules/.pnpm/vite@6.4.1_jiti@2.6.1_lightningcss@1.32.0/node_modules/vite/bin/vite.js", "/Users/maddisonmarkham/Documents/github/system_builder/src/app"],
       "port": 5173
     },
     {
       "name": "api",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@system-builder/api", "dev"],
+      "runtimeExecutable": "/Users/maddisonmarkham/.nvm/versions/node/v24.11.1/bin/npx",
+      "runtimeArgs": ["wrangler", "dev", "--config", "/Users/maddisonmarkham/Documents/github/system_builder/src/api/wrangler.toml"],
       "port": 8787
     }
   ]

@@ -9,8 +9,12 @@
   "scripts": {
     "dev": "pnpm --filter @system-builder/app dev",
     "dev:api": "pnpm --filter @system-builder/api dev",
+    "dev:all": "pnpm --parallel --filter @system-builder/app --filter @system-builder/api dev",
     "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "bump:api": "bash scripts/bump-api.sh",
+    "bump:app": "bash scripts/bump-app.sh",
+    "setup:dev": "bash scripts/setup-dev.sh"
   },
   "pnpm": {
     "onlyBuiltDependencies": ["esbuild", "vue-demi", "workerd"]

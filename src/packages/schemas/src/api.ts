@@ -23,7 +23,8 @@ export const SaveConflictResponseSchema = z.object({
 
 // Version check response — returned by GET /version on session start
 export const VersionResponseSchema = z.object({
-  version: z.string(),
+  api: z.string(),
+  app: z.string(),
   killFlag: z.object({
     rejectedAt: z.number(),
     winnerDeviceId: z.string(),

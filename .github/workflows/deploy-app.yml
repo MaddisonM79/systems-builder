@@ -1,0 +1,48 @@
+name: Deploy App
+
+on:
+  push:
+    tags:
+      - 'app-v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Read app version
+        id: version
+        run: echo "value=$(node -p "require('./src/app/package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: pnpm --filter @system-builder/app build
+
+      - name: Write app version to KV
+        run: |
+          pnpm --filter @system-builder/api wrangler kv key put \
+            app:version "${{ steps.version.outputs.value }}" \
+            --namespace-id=${{ secrets.KV_NAMESPACE_ID }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deploy to Cloudflare Pages
+        run: |
+          pnpm --filter @system-builder/api wrangler pages deploy src/app/dist \
+            --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

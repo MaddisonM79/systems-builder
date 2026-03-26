@@ -4,10 +4,10 @@
       v-for="item in ITEMS"
       :key="item.id"
       class="px-3 text-xs font-medium transition-colors duration-100 border-b-2 -mb-px"
-      :class="item.id === 'build' && buildActive
+      :class="activeTab === item.id
         ? 'border-primary text-base-content'
         : 'border-transparent text-base-content/50 hover:text-base-content/80'"
-      @click="onItemClick(item.id)"
+      @click="emit('tab-change', item.id)"
     >
       {{ item.label }}
     </button>
@@ -15,30 +15,18 @@
 </template>
 
 <script setup lang="ts">
-type MenuItemId = 'build' | 'upgrades' | 'research' | 'prestige'
+export type TabId = 'build' | 'upgrades' | 'research' | 'prestige'
 
-const ITEMS: Array<{ id: MenuItemId; label: string }> = [
+const ITEMS: Array<{ id: TabId; label: string }> = [
   { id: 'build',    label: 'Build' },
   { id: 'upgrades', label: 'Upgrades' },
   { id: 'research', label: 'Research' },
   { id: 'prestige', label: 'Prestige' },
 ]
 
-defineProps<{ buildActive: boolean }>()
+defineProps<{ activeTab: TabId }>()
 
 const emit = defineEmits<{
-  'toggle-build':   []
-  'open-upgrades':  []
-  'open-research':  []
-  'open-prestige':  []
+  'tab-change': [tab: TabId]
 }>()
-
-function onItemClick(id: MenuItemId) {
-  switch (id) {
-    case 'build':    emit('toggle-build');   break
-    case 'upgrades': emit('open-upgrades');  break
-    case 'research': emit('open-research');  break
-    case 'prestige': emit('open-prestige');  break
-  }
-}
 </script>

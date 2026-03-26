@@ -1,4 +1,4 @@
-import type { CardDefinition, ItemDefinition } from '@system-builder/schemas'
+import type { CardDefinition, ItemDefinition, ResearchTechDefinition } from '@system-builder/schemas'
 import { generators } from './generators'
 import { refiners } from './refiners'
 import { sellers } from './sellers'
@@ -9,6 +9,7 @@ import { storage } from './storage'
 import { researchers } from './researchers'
 import { items } from './items'
 import { upgrades } from './upgrades'
+import { techs } from './techs'
 
 // Full card catalog — imported by the app engine registry and the API catalog route
 export const catalog: CardDefinition[] = [
@@ -22,5 +23,5 @@ export const catalog: CardDefinition[] = [
   ...researchers,
 ]
 
-export type { CardDefinition, ItemDefinition }
-export { generators, refiners, sellers, splitters, combiners, converters, storage, researchers, items, upgrades }
+export type { CardDefinition, ItemDefinition, ResearchTechDefinition }
+export { generators, refiners, sellers, splitters, combiners, converters, storage, researchers, items, upgrades, techs }

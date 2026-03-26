@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { catalog, upgrades } from '@system-builder/catalog'
+import { catalog, upgrades, techs } from '@system-builder/catalog'
 import { costForTier } from '@system-builder/schemas'
 import { useSimStore } from './sim'
 
@@ -9,6 +9,9 @@ export const useGameStore = defineStore('game', () => {
 
   // Raw purchase state — upgradeId → times purchased
   const purchasedUpgrades = ref<Record<string, number>>({})
+
+  // Researched tech IDs — accumulated across runs; applied permanently on prestige
+  const researchedTechs = ref<Set<string>>(new Set())
 
   // Derived: set of card IDs the player can place.
   // Free cards always included; upgrade-unlocked cards added when purchased.
@@ -59,6 +62,23 @@ export const useGameStore = defineStore('game', () => {
     return true
   }
 
+  // Attempt to research a tech. Returns true on success.
+  // Prereqs must all be researched; player must have enough RP.
+  function researchTech(techId: string): boolean {
+    const tech = techs.find(t => t.id === techId)
+    if (!tech) return false
+    if (researchedTechs.value.has(techId)) return false
+    if (!tech.prerequisites.every(p => researchedTechs.value.has(p))) return false
+
+    const simStore = useSimStore()
+    if (simStore.researchPoints < tech.rpCost) return false
+
+    simStore.researchPoints -= tech.rpCost
+    // Spread into new Set to trigger reactivity
+    researchedTechs.value = new Set([...researchedTechs.value, techId])
+    return true
+  }
+
   // TODO: story progress milestones
   // TODO: tech tree selections (accumulated, applied on prestige)
 
@@ -67,5 +87,7 @@ export const useGameStore = defineStore('game', () => {
     purchasedUpgrades,
     unlockedCardIds,
     purchaseUpgrade,
+    researchedTechs,
+    researchTech,
   }
 })

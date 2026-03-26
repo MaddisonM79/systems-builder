@@ -22,16 +22,13 @@
       <GridBackground />
     </VueFlow>
 
-    <Transition name="build-menu">
-      <BuildMenu v-if="showBuildMenu" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10" />
-    </Transition>
+    <BuildMenu class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, nextTick, markRaw, computed, watch } from 'vue'
 
-defineProps<{ showBuildMenu: boolean }>()
 import {
   VueFlow, useVueFlow,
   type Node, type Edge,

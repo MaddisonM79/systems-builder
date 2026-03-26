@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 flex flex-col gap-6 overflow-y-auto" style="max-height: 60vh;">
+  <div class="p-6 flex flex-col gap-6 overflow-y-auto h-full">
     <template v-for="(group, category) in groupedUpgrades" :key="category">
       <!-- Category heading -->
       <div>

@@ -8,6 +8,17 @@ export const AVAILABLE_THEMES = [
 
 export type Theme = typeof AVAILABLE_THEMES[number]
 
+// ── localStorage keys ─────────────────────────────────────────────────────────
+// Centralised here to prevent typo-induced silent preference loss
+
+const LS_KEYS = {
+  ROUTING_STYLE:   'sb-routing-style',
+  GRID_STYLE:      'sb-grid-style',
+  THEME:           'sb-theme',
+  SHOW_BUFFER_FILL:  'sb-show-buffer-fill',
+  SHOW_BUFFER_COUNT: 'sb-show-buffer-count',
+} as const
+
 // ── localStorage helpers ───────────────────────────────────────────────────────
 
 function lsGet(key: string): string | null {
@@ -33,14 +44,14 @@ export const useUserStore = defineStore('user', () => {
 
   // User preferences — initialised from localStorage, watched and re-persisted on change
   const routingStyle   = ref<'orthogonal' | 'rounded' | 'straight'>(
-    (lsGet('sb-routing-style') as 'orthogonal' | 'rounded' | 'straight') ?? 'rounded',
+    (lsGet(LS_KEYS.ROUTING_STYLE) as 'orthogonal' | 'rounded' | 'straight') ?? 'rounded',
   )
   const gridStyle      = ref<'lines' | 'dots' | 'cross'>(
-    (lsGet('sb-grid-style') as 'lines' | 'dots' | 'cross') ?? 'lines',
+    (lsGet(LS_KEYS.GRID_STYLE) as 'lines' | 'dots' | 'cross') ?? 'lines',
   )
-  const theme          = ref<Theme>((lsGet('sb-theme') as Theme) ?? 'retro')
-  const showBufferFill  = ref(lsBool('sb-show-buffer-fill',  true))
-  const showBufferCount = ref(lsBool('sb-show-buffer-count', true))
+  const theme          = ref<Theme>((lsGet(LS_KEYS.THEME) as Theme) ?? 'retro')
+  const showBufferFill  = ref(lsBool(LS_KEYS.SHOW_BUFFER_FILL,  true))
+  const showBufferCount = ref(lsBool(LS_KEYS.SHOW_BUFFER_COUNT, true))
 
   // Apply theme to DOM on init
   document.documentElement.dataset.theme = theme.value
@@ -48,14 +59,14 @@ export const useUserStore = defineStore('user', () => {
   function setTheme(newTheme: Theme) {
     theme.value = newTheme
     document.documentElement.dataset.theme = newTheme
-    lsSet('sb-theme', newTheme)
+    lsSet(LS_KEYS.THEME, newTheme)
   }
 
   // Watch all other prefs and persist automatically
-  watch(routingStyle,   v => lsSet('sb-routing-style',      v))
-  watch(gridStyle,      v => lsSet('sb-grid-style',          v))
-  watch(showBufferFill,  v => lsSet('sb-show-buffer-fill',  String(v)))
-  watch(showBufferCount, v => lsSet('sb-show-buffer-count', String(v)))
+  watch(routingStyle,    v => lsSet(LS_KEYS.ROUTING_STYLE,      v))
+  watch(gridStyle,       v => lsSet(LS_KEYS.GRID_STYLE,         v))
+  watch(showBufferFill,  v => lsSet(LS_KEYS.SHOW_BUFFER_FILL,   String(v)))
+  watch(showBufferCount, v => lsSet(LS_KEYS.SHOW_BUFFER_COUNT,  String(v)))
 
   return {
     user,

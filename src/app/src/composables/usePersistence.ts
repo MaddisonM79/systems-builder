@@ -21,7 +21,9 @@ export function usePersistence() {
   let lastSave: SaveV1 | null = null
   let saveTimer: ReturnType<typeof setTimeout> | null = null
   // Prevents auto-save from firing during initial store hydration
-  let hydrating = false
+  let hydrating  = false
+  // Prevents concurrent writes — if a save is already in flight, skip the overlap
+  let saving     = false
 
   function buildSnapshot() {
     return {
@@ -39,9 +41,15 @@ export function usePersistence() {
   }
 
   async function saveNow(): Promise<void> {
-    const save = serialize(buildSnapshot(), lastSave)
-    await writeSave(save)
-    lastSave = save
+    if (saving) return
+    saving = true
+    try {
+      const save = serialize(buildSnapshot(), lastSave)
+      await writeSave(save)
+      lastSave = save
+    } finally {
+      saving = false
+    }
   }
 
   function scheduleSave(): void {

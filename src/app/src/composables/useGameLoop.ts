@@ -4,10 +4,12 @@ import { useSimStore } from '@/stores/sim'
 import { createSimulation } from '@/engine/simulation'
 import type { BufferContents, SimDelta, Simulation } from '@/engine/simulation'
 import { catalog, items } from '@system-builder/catalog'
+import { TICK_CONFIG } from '@system-builder/constants'
 
 // Module-level singleton — any component calling useGameLoop() shares this instance
-let _sim:        Simulation | null = null
-let _intervalId: ReturnType<typeof setInterval> | null = null
+let _sim:           Simulation | null = null
+let _intervalId:    ReturnType<typeof setInterval> | null = null
+let _watcherActive: boolean = false
 
 // Called by usePersistence at save time — avoids storing live buffer state in the store
 export function getSimBufferContents(): BufferContents {
@@ -40,8 +42,8 @@ export function useGameLoop() {
       _sim.seedBuffers(simStore.bufferContents)
     }
     _intervalId = setInterval(() => {
-      if (_sim) applyDelta(_sim.tick(0.1), 0.1)
-    }, 100)
+      if (_sim) applyDelta(_sim.tick(TICK_CONFIG.DT), TICK_CONFIG.DT)
+    }, TICK_CONFIG.INTERVAL_MS)
   }
 
   function stop(): void {
@@ -54,7 +56,7 @@ export function useGameLoop() {
   // Run n real simulation ticks immediately (used by DevPanel)
   function manualTick(n: number): void {
     if (!_sim) return
-    const dt = 0.1
+    const dt = TICK_CONFIG.DT
     const merged: SimDelta = {
       coinDelta:           0,
       researchPointsDelta: 0,
@@ -86,10 +88,15 @@ export function useGameLoop() {
     applyDelta(merged, dt * n)
   }
 
-  // Reinit simulation when the board graph changes (card added/removed/connected)
-  watch(() => boardStore.revision, () => {
-    _sim?.reinit(boardStore.cards, boardStore.connections)
-  }, { flush: 'post' })
+  // Reinit simulation when the board graph changes (card added/removed/connected).
+  // Guard ensures only one watcher is registered regardless of how many callers
+  // invoke useGameLoop() (e.g. App.vue + DevPanel.vue both call it).
+  if (!_watcherActive) {
+    _watcherActive = true
+    watch(() => boardStore.revision, () => {
+      _sim?.reinit(boardStore.cards, boardStore.connections)
+    }, { flush: 'post' })
+  }
 
   const isRunning = computed(() => _intervalId !== null)
 

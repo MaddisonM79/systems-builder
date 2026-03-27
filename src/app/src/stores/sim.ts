@@ -42,11 +42,12 @@ export const useSimStore = defineStore('sim', () => {
   const EMA_ALPHA = 0.2
   function updatePortRates(portFlows: Record<string, number>, dt: number): void {
     const rates = portRates.value
-    // Decay all existing rates toward zero
+    const active = new Set(Object.keys(portFlows))
+    // Decay only ports with no new flow this tick
     for (const portId in rates) {
-      rates[portId] = (1 - EMA_ALPHA) * rates[portId]
+      if (!active.has(portId)) rates[portId] = (1 - EMA_ALPHA) * rates[portId]
     }
-    // Apply new observations
+    // EMA-blend new observations (no prior decay applied)
     for (const [portId, count] of Object.entries(portFlows)) {
       const observed = count / dt
       rates[portId] = EMA_ALPHA * observed + (1 - EMA_ALPHA) * (rates[portId] ?? 0)

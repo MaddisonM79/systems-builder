@@ -38,7 +38,8 @@
 
           <!-- Tab content -->
           <div class="bg-base-100">
-            <UpgradesTab v-if="activeTab === 'upgrades'" />
+            <UpgradesTab  v-if="activeTab === 'upgrades'" />
+            <ResearchTab  v-else-if="activeTab === 'research_tree'" />
 
             <div v-else class="flex items-center justify-center py-16 text-sm text-base-content/30 italic">
               Coming soon
@@ -52,11 +53,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import UpgradesTab from './UpgradesTab.vue'
-
-defineProps<{ modelValue: boolean }>()
-defineEmits<{ 'update:modelValue': [value: boolean] }>()
+import ResearchTab from './ResearchTab.vue'
 
 const TABS = [
   { id: 'upgrades',      label: 'Upgrades' },
@@ -65,7 +64,16 @@ const TABS = [
 ] as const
 
 type TabId = typeof TABS[number]['id']
-const activeTab = ref<TabId>('upgrades')
+
+const props = defineProps<{ modelValue: boolean; initialTab?: TabId }>()
+defineEmits<{ 'update:modelValue': [value: boolean] }>()
+
+const activeTab = ref<TabId>(props.initialTab ?? 'upgrades')
+
+// Sync to whichever tab triggered the open each time the modal is shown
+watch(() => props.modelValue, (open) => {
+  if (open) activeTab.value = props.initialTab ?? 'upgrades'
+})
 </script>
 
 <style scoped>

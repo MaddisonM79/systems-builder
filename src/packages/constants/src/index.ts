@@ -1,3 +1,18 @@
+// Simulation tick timing — DT and INTERVAL_MS are coupled; always change together
+export const TICK_CONFIG = {
+  DT:          0.1,  // seconds per tick
+  INTERVAL_MS: 100,  // milliseconds between ticks (must equal DT * 1000)
+} as const
+
+// Unlock condition discriminant values — mirrors the Zod union in schemas/card.ts
+export const UNLOCK_CONDITION_TYPES = {
+  FREE:             'free',
+  COIN:             'coin',
+  RESEARCH_POINTS:  'researchPoints',
+  XP:               'xp',
+  STORY_MILESTONE:  'storyMilestone',
+} as const
+
 // API response codes
 export const API_CODES = {
   SAVE_CONFLICT: 'SAVE_CONFLICT',

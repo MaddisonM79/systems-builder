@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { catalog, upgrades, techs } from '@system-builder/catalog'
 import { costForTier } from '@system-builder/schemas'
+import { UNLOCK_CONDITION_TYPES } from '@system-builder/constants'
 import { useSimStore } from './sim'
 
 export const useGameStore = defineStore('game', () => {
@@ -18,7 +19,7 @@ export const useGameStore = defineStore('game', () => {
   const unlockedCardIds = computed<Set<string>>(() => {
     const unlocked = new Set(
       catalog
-        .filter(d => d.unlockCondition.type === 'free')
+        .filter(d => d.unlockCondition.type === UNLOCK_CONDITION_TYPES.FREE)
         .map(d => d.id),
     )
     for (const upg of upgrades) {

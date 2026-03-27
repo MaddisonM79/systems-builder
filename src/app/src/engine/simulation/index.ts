@@ -65,6 +65,10 @@ export function createSimulation(
   const runtimes = new Map<CardId, CardRuntime>()
   let topoOrder: CardId[] = []
 
+  // O(1) lookup maps — rebuilt once on init/reinit, not on every tick
+  const catalogById  = new Map(catalog.map(d => [d.id, d]))
+  const itemDefsById = new Map(itemDefs.map(d => [d.id, d]))
+
   // ── Initialization ──────────────────────────────────────────────────────────
 
   function initRuntimes(): void {
@@ -123,7 +127,7 @@ export function createSimulation(
 
   function defFor(cardId: CardId): CardDefinition | undefined {
     const card = cards.get(cardId)
-    return card ? catalog.find(d => d.id === card.typeId) : undefined
+    return card ? catalogById.get(card.typeId) : undefined
   }
 
   function getAcc(rt: CardRuntime, key: string): number {
@@ -146,11 +150,11 @@ export function createSimulation(
   }
 
   function maxSlotsFor(resourceType: string): number {
-    return itemDefs.find(i => i.id === resourceType)?.baseUpgradeSlots ?? 0
+    return itemDefsById.get(resourceType)?.baseUpgradeSlots ?? 0
   }
 
   function coinValue(item: FlowItem): number {
-    const base = itemDefs.find(i => i.id === item.resourceType)?.baseValue ?? 0
+    const base = itemDefsById.get(item.resourceType)?.baseValue ?? 0
     return base + item.appliedBonuses.reduce((s, b) => s + b.bonus, 0)
   }
 
@@ -355,7 +359,7 @@ export function createSimulation(
       const actual = Math.min(consumeCount, inBuf.length)
       for (let j = 0; j < actual; j++) {
         const item    = inBuf.shift()!
-        const itemDef = itemDefs.find(d => d.id === item.resourceType)
+        const itemDef = itemDefsById.get(item.resourceType)
         if (!itemDef?.researchable) continue  // guard — drop non-researchable items
         delta.researchPointsDelta += coinValue(item) * ECONOMY.RP_PER_VALUE
         delta.cardXpDeltas[cardId] = (delta.cardXpDeltas[cardId] ?? 0) + 1
